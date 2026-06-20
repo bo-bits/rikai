@@ -2,11 +2,17 @@
 
 ## On project open
 
-Check `students/` for an existing student folder matching the current user.
+**Step 1 — identify the student**
 
-- **No student folder exists** → run onboarding: load `system/prompts/onboarding.md` and `system/teacher_persona.md` as your system context, then begin the interview.
-- **Student folder exists, no recent session** → greet them, show 2-3 topic suggestions from their `topics/index.md`, and ask what they want to do today.
-- **Student folder exists** → pick up where they left off using the open thread in the most recently visited topic file.
+Check if `students/.current` exists.
+- **Yes** → read it to get the student ID. Greet them by name and skip to Step 2.
+- **No** → ask: "Welcome to Rikai. What's your name?" Use their answer as the student ID (lowercase, no spaces — e.g. "Jimmy" → `jimmy`).
+
+**Step 2 — check for existing profile**
+
+Check if `students/{id}/` exists.
+- **No folder** → new student: run onboarding (load `system/prompts/onboarding.md` + `system/teacher_persona.md`). After onboarding completes, write their ID to `students/.current` (this file is git-ignored — it's local only).
+- **Folder exists** → returning student: load their profile and topics index, greet them, surface 2-3 suggestions from `topics/index.md`, and ask what they want to do today.
 
 ## Skills
 
