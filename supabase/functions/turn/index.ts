@@ -8,6 +8,7 @@
 
 import Anthropic from "npm:@anthropic-ai/sdk@0.71.0";
 import { MODEL, supabase } from "../_shared/clients.ts";
+import { requireUser } from "../_shared/auth.ts";
 import { json, withRequest } from "../_shared/http.ts";
 import { callModel } from "../_shared/telemetry.ts";
 import {
@@ -62,12 +63,18 @@ async function readTopic(
 }
 
 interface TurnRequest {
-  student_id?: string;
   topic_slug?: string | null;
   user_message?: string;
 }
 
 Deno.serve(withRequest("turn", async (req, ctx) => {
+  // Identity comes from the verified JWT, not the body — the caller can't spoof
+  // which student they are.
+  const auth = await requireUser(req);
+  if (auth instanceof Response) return auth;
+  const studentId = auth.userId;
+  ctx.studentId = studentId;
+
   let body: TurnRequest;
   try {
     body = await req.json();
@@ -75,13 +82,10 @@ Deno.serve(withRequest("turn", async (req, ctx) => {
     return json({ error: "invalid JSON body" }, 400);
   }
 
-  const studentId = body.student_id?.trim();
   const userMessage = body.user_message?.trim();
   const topicSlug = body.topic_slug?.trim() || null;
 
-  if (!studentId) return json({ error: "student_id is required" }, 400);
   if (!userMessage) return json({ error: "user_message is required" }, 400);
-  ctx.studentId = studentId;
 
   // --- Load state -----------------------------------------------------------
 
