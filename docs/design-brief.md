@@ -1,4 +1,4 @@
-# rickai — Design Brief (v3)
+# rikai — Design Brief (v3)
 
 ## What it is
 A personal tutor whose value is the **context layer**, not the content. Claude already knows everything; the product knows *this student* — what they've explored, what lights them up, what doesn't stick — and teaches accordingly. Learning-for-its-own-sake users, not exam-prep.

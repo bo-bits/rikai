@@ -73,7 +73,7 @@ export default function SignIn() {
           <View style={styles.container}>
             <View style={styles.header}>
               <ThemedText type="title" style={styles.brand}>
-                rickai
+                rikai
               </ThemedText>
               <ThemedText themeColor="textSecondary">
                 {step === 'email'

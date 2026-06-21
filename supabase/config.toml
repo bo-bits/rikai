@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "rickai"
+project_id = "rikai"
 
 [api]
 enabled = true
@@ -231,7 +231,7 @@ otp_expiry = 3600
 # Both link + code are present so prefetching mail clients can't burn the
 # single-use token before the user enters the code.
 [auth.email.template.magic_link]
-subject = "Your rickai sign-in code"
+subject = "Your rikai sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
 # Use a production-ready SMTP server

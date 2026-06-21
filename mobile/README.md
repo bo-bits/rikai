@@ -1,6 +1,6 @@
-# rickai mobile
+# rikai mobile
 
-Expo (SDK 56, expo-router) client for the rickai backend. This is **plumbing**:
+Expo (SDK 56, expo-router) client for the rikai backend. This is **plumbing**:
 auth + the 3-tab shell + a verified connection to the `turn` edge function. UI/UX
 comes later.
 
