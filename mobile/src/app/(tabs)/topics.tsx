@@ -107,7 +107,7 @@ export default function Topics() {
           styles.newButton,
           { backgroundColor: theme.tint, opacity: pressed ? 0.8 : 1 },
         ]}
-        onPress={() => router.navigate('/')}>
+        onPress={() => router.push('/chat')}>
         <ThemedText style={[styles.newButtonText, { color: theme.background }]}>
           + New topic
         </ThemedText>

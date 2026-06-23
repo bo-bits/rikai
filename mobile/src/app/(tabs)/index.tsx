@@ -1,188 +1,193 @@
-// Chat tab — also the end-to-end pipe test. Sending a message hits the `turn`
-// edge function with the session JWT; a reply (with its request_id) confirms the
-// full path works: app session → JWT → verified student_id → Anthropic → back.
+// Home / Today — the landing screen. Greets the student, offers the most
+// recently visited topic to continue, links to the full topics list, and shows
+// a few Explore suggestions (static for now — Issue B-5 will make these dynamic).
 
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { ChevronRight } from 'lucide-react-native';
 
+import { StatusDot } from '@/components/status-dot';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { fetchTopics, type Topic } from '@/lib/api';
+import { useSession } from '@/lib/auth';
 import { useTheme } from '@/hooks/use-theme';
-import { callTurn } from '@/lib/api';
 
-type Msg = {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  requestId?: string;
-};
+// Static Explore suggestions until B-5 (signal-driven feed) lands.
+const EXPLORE_SUGGESTIONS = [
+  { title: 'The Medici Family', blurb: 'The bankers who bankrolled the Renaissance.' },
+  { title: 'Game Theory', blurb: 'Why rational people sometimes choose to lose.' },
+  { title: 'The Byzantine Empire', blurb: 'Rome that refused to fall for a thousand years.' },
+];
 
-export default function Chat() {
+function greetingName(email: string | undefined): string {
+  if (!email) return 'there';
+  const handle = email.split('@')[0];
+  return handle.charAt(0).toUpperCase() + handle.slice(1);
+}
+
+export default function Home() {
   const theme = useTheme();
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const listRef = useRef<FlatList<Msg>>(null);
+  const router = useRouter();
+  const { session } = useSession();
 
-  async function send() {
-    const text = input.trim();
-    if (!text || busy) return;
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const userMsg: Msg = { id: `u-${Date.now()}`, role: 'user', text };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setBusy(true);
+  useEffect(() => {
+    fetchTopics()
+      .then(setTopics)
+      .catch(() => setTopics([]))
+      .finally(() => setLoading(false));
+  }, []);
 
-    try {
-      const res = await callTurn(text);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: 'assistant',
-          text: res.assistant_message,
-          requestId: res.request_id,
-        },
-      ]);
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `e-${Date.now()}`,
-          role: 'assistant',
-          text: `⚠️ ${err instanceof Error ? err.message : String(err)}`,
-        },
-      ]);
-    } finally {
-      setBusy(false);
-      requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
-    }
-  }
+  const name = greetingName(session?.user?.email);
+  const continueTopic = topics[0] ?? null;
 
   return (
-    <View style={[styles.fill, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={styles.fill} edges={['bottom']}>
-        <KeyboardAvoidingView
-          style={styles.fill}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={90}>
-          <FlatList
-            ref={listRef}
-            data={messages}
-            keyExtractor={(m) => m.id}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <ThemedText themeColor="textSecondary" style={styles.empty}>
-                Say something to test the pipe. Your message goes to the `turn`
-                function authenticated with your session.
-              </ThemedText>
-            }
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.bubble,
-                  item.role === 'user'
-                    ? { backgroundColor: theme.tint, alignSelf: 'flex-end' }
-                    : {
-                        backgroundColor: theme.backgroundElement,
-                        alignSelf: 'flex-start',
-                      },
-                ]}>
-                <ThemedText
-                  style={item.role === 'user' ? { color: '#fff' } : undefined}>
-                  {item.text}
-                </ThemedText>
-                {item.requestId ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
-                    {item.requestId}
-                  </ThemedText>
-                ) : null}
-              </View>
-            )}
-          />
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ThemedText type="displayLarge" style={styles.hello}>
+          Hello, {name}.
+        </ThemedText>
 
-          <View style={[styles.composer, { borderTopColor: theme.border }]}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.backgroundElement,
-                  borderColor: theme.border,
-                  color: theme.text,
-                },
-              ]}
-              placeholder="Message…"
-              placeholderTextColor={theme.textSecondary}
-              value={input}
-              onChangeText={setInput}
-              editable={!busy}
-              multiline
-              onSubmitEditing={send}
-            />
+        {/* Continue section */}
+        {loading ? (
+          <ActivityIndicator color={theme.textSecondary} style={styles.loader} />
+        ) : continueTopic ? (
+          <View style={styles.section}>
+            <ThemedText type="small" themeColor="textTertiary" style={styles.eyebrow}>
+              CONTINUE
+            </ThemedText>
             <Pressable
               style={({ pressed }) => [
-                styles.sendButton,
-                { backgroundColor: theme.tint, opacity: pressed || busy ? 0.6 : 1 },
+                styles.continueCard,
+                { backgroundColor: theme.inputFill, opacity: pressed ? 0.85 : 1 },
               ]}
-              onPress={send}
-              disabled={busy}>
-              {busy ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <ThemedText style={styles.sendText}>Send</ThemedText>
-              )}
+              onPress={() =>
+                router.push({
+                  pathname: '/chat',
+                  params: { topic: continueTopic.topic_slug, title: continueTopic.title },
+                })
+              }>
+              <View style={styles.cardTitleRow}>
+                <StatusDot status={continueTopic.status} size={10} />
+                <ThemedText type="default" style={styles.cardTitle}>
+                  {continueTopic.title}
+                </ThemedText>
+              </View>
+              <ThemedText type="default" themeColor="textSecondary" style={styles.thread}>
+                {continueTopic.resume_prompt ?? 'Pick up where you left off.'}
+              </ThemedText>
+              <ThemedText type="small" style={[styles.cta, { color: theme.tint }]}>
+                Continue the thread →
+              </ThemedText>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+        ) : (
+          <View style={styles.section}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.continueCard,
+                { backgroundColor: theme.inputFill, opacity: pressed ? 0.85 : 1 },
+              ]}
+              onPress={() => router.push('/chat')}>
+              <ThemedText type="default" style={styles.cardTitle}>
+                Start exploring
+              </ThemedText>
+              <ThemedText type="default" themeColor="textSecondary" style={styles.thread}>
+                Ask about anything you're curious about and your tutor will pick
+                it up from there.
+              </ThemedText>
+              <ThemedText type="small" style={[styles.cta, { color: theme.tint }]}>
+                Start a conversation →
+              </ThemedText>
+            </Pressable>
+          </View>
+        )}
+
+        {/* See all topics */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.allTopicsRow,
+            { borderColor: theme.border, opacity: pressed ? 0.7 : 1 },
+          ]}
+          onPress={() => router.navigate('/topics')}>
+          <ThemedText type="default">See all topics</ThemedText>
+          <ChevronRight size={20} color={theme.textTertiary} strokeWidth={2} />
+        </Pressable>
+
+        {/* Explore */}
+        <View style={styles.section}>
+          <ThemedText type="small" themeColor="textTertiary" style={styles.eyebrow}>
+            EXPLORE
+          </ThemedText>
+          {EXPLORE_SUGGESTIONS.map((s) => (
+            <Pressable
+              key={s.title}
+              style={({ pressed }) => [
+                styles.exploreCard,
+                { borderColor: theme.border, opacity: pressed ? 0.7 : 1 },
+              ]}
+              onPress={() =>
+                router.push({ pathname: '/chat', params: { title: s.title } })
+              }>
+              <ThemedText type="default" style={styles.cardTitle}>
+                {s.title}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {s.blurb}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  listContent: { padding: Spacing.three, gap: Spacing.two, flexGrow: 1 },
-  empty: { textAlign: 'center', marginTop: Spacing.six, paddingHorizontal: Spacing.four },
-  bubble: {
-    maxWidth: '85%',
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    gap: Spacing.half,
+  safe: { flex: 1 },
+  scroll: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.six,
+    gap: Spacing.five,
   },
-  meta: { fontSize: 11 },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+  hello: { marginBottom: Spacing.one },
+  loader: { alignSelf: 'flex-start' },
+  section: { gap: Spacing.two },
+  eyebrow: { letterSpacing: 1, fontWeight: '600' },
+  continueCard: {
+    borderRadius: 16,
+    padding: Spacing.four,
     gap: Spacing.two,
-    padding: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: Spacing.three,
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  cardTitle: { fontWeight: '600' },
+  thread: { lineHeight: 24 },
+  cta: { fontWeight: '600', marginTop: Spacing.one },
+  allTopicsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    maxHeight: 120,
-    fontSize: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
   },
-  sendButton: {
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    justifyContent: 'center',
-    minHeight: 44,
+  exploreCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    padding: Spacing.three,
+    gap: Spacing.one,
   },
-  sendText: { color: '#fff', fontWeight: '600' },
 });
