@@ -1,35 +1,39 @@
-/**
- * Claude-like palette: warm off-white "paper" backgrounds, near-black ink text,
- * and a terracotta/clay accent. Light + dark variants share the same keys so the
- * `ThemeColor` union (and the themed-* components) stay valid.
- *
- * UI/UX is intentionally minimal for now — this is plumbing. Tune freely.
- */
-
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#1F1E1C',
-    textSecondary: '#6E6B64',
-    background: '#F7F4EE',
-    backgroundElement: '#EFEAE1',
-    backgroundSelected: '#E6DFD2',
-    border: '#E2DBCE',
-    tint: '#C96442', // terracotta accent
-    danger: '#B3402F',
+    text: '#1A1A18',
+    textSecondary: '#6B6B65',
+    textTertiary: '#9E9E96',
+    background: '#FFFFFF',
+    backgroundElement: '#F1F1F3',
+    backgroundSelected: '#E8E8EA',
+    border: 'rgba(0,0,0,0.07)',
+    inputFill: '#F1F1F3',
+    tint: '#1A1A18',
+    danger: '#D93B30',
+    statusExploring: '#F59E0B',
+    statusDeveloping: '#3B82F6',
+    statusSolid: '#14B8A6',
+    statusMastered: '#8B5CF6',
   },
   dark: {
-    text: '#F2EFE9',
-    textSecondary: '#A8A39A',
-    background: '#1F1E1C',
-    backgroundElement: '#2A2926',
-    backgroundSelected: '#33312D',
-    border: '#3A382F',
-    tint: '#D97757',
+    text: '#F2F2F0',
+    textSecondary: '#A8A8A0',
+    textTertiary: '#6B6B65',
+    background: '#1A1A18',
+    backgroundElement: '#242422',
+    backgroundSelected: '#2E2E2C',
+    border: 'rgba(255,255,255,0.08)',
+    inputFill: '#242422',
+    tint: '#FFFFFF',
     danger: '#E0735A',
+    statusExploring: '#F59E0B',
+    statusDeveloping: '#3B82F6',
+    statusSolid: '#14B8A6',
+    statusMastered: '#8B5CF6',
   },
 } as const;
 
@@ -38,19 +42,22 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',
-    serif: 'ui-serif',
+    serif: 'Fraunces-Regular',
+    serifBold: 'Fraunces-SemiBold',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
   },
   default: {
     sans: 'normal',
-    serif: 'serif',
+    serif: 'Fraunces-Regular',
+    serifBold: 'Fraunces-SemiBold',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
     sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
+    serif: 'Fraunces, serif',
+    serifBold: 'Fraunces, serif',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
   },

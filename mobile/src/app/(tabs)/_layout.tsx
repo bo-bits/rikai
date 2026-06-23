@@ -1,14 +1,11 @@
-// The three protected tabs. Classic JS Tabs (not NativeTabs) so the bar is fully
-// themeable to the Claude-like palette. Icons are plain glyphs to avoid an extra
-// icon dependency — swap for a real icon set during the UI pass.
-
 import { Tabs } from 'expo-router';
-import { Text, type ColorValue } from 'react-native';
+import { BookOpen, Sun, User } from 'lucide-react-native';
+import type { ColorValue } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 
-function TabGlyph({ glyph, color }: { glyph: string; color: ColorValue }) {
-  return <Text style={{ fontSize: 20, color }}>{glyph}</Text>;
+function TabIcon({ Icon, color }: { Icon: React.ElementType; color: ColorValue }) {
+  return <Icon size={22} color={color} strokeWidth={1.75} />;
 }
 
 export default function TabsLayout() {
@@ -22,30 +19,31 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
+          borderTopWidth: 1,
         },
         headerStyle: { backgroundColor: theme.background },
-        headerTitleStyle: { color: theme.text },
+        headerTitleStyle: { color: theme.text, fontFamily: 'Fraunces-Regular', fontSize: 18 },
         headerShadowVisible: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Chat',
-          tabBarIcon: ({ color }) => <TabGlyph glyph="💬" color={color} />,
+          title: 'Explore',
+          tabBarIcon: ({ color }) => <TabIcon Icon={Sun} color={color} />,
         }}
       />
       <Tabs.Screen
         name="topics"
         options={{
           title: 'Topics',
-          tabBarIcon: ({ color }) => <TabGlyph glyph="📚" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon Icon={BookOpen} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <TabGlyph glyph="👤" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon Icon={User} color={color} />,
         }}
       />
     </Tabs>
