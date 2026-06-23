@@ -21,7 +21,11 @@ import { fetchTopics, type Topic } from '@/lib/api';
 import { useSession } from '@/lib/auth';
 import { useTheme } from '@/hooks/use-theme';
 
-// Static Explore suggestions until B-5 (signal-driven feed) lands.
+// STUB: hardcoded Explore suggestions. Replace with the real signal-driven feed
+// (student interests + started topics) once the backend lands.
+//   Explore feed:  https://github.com/bo-bits/rikai/issues/4  (B-5)
+//   depends on onboarding: https://github.com/bo-bits/rikai/issues/3
+// The expected shape ({ title, blurb, topic_slug? }) is documented in #4.
 const EXPLORE_SUGGESTIONS = [
   { title: 'The Medici Family', blurb: 'The bankers who bankrolled the Renaissance.' },
   { title: 'Game Theory', blurb: 'Why rational people sometimes choose to lose.' },
