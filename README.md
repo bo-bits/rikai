@@ -134,9 +134,18 @@ values.
 
 ## Troubleshooting
 
+- **"permission denied for table sessions/documents/topics"** — the local stack
+  is missing table-level GRANTs. This happens when the `grants` migration hasn't
+  been applied. Run `supabase db reset` to re-apply all migrations from scratch.
+  Note: `db reset` wipes all local data — sign out and back in afterwards to mint
+  a fresh JWT.
 - **"Could not resolve authentication method" / model call fails** — the Edge
-  runtime has no Anthropic key. Locally: create `supabase/functions/.env` and
-  restart. Deployed: `supabase secrets set ANTHROPIC_API_KEY=...`.
+  runtime has no Anthropic key. Locally: create `supabase/functions/.env` with
+  `ANTHROPIC_API_KEY=sk-ant-...` and restart with `supabase stop && supabase start`.
+  Deployed: `supabase secrets set ANTHROPIC_API_KEY=...`.
+- **Do not run `supabase functions serve` alongside `supabase start`** — the Edge
+  runtime is built into `supabase start`. Running both creates two competing
+  runtimes. Only `supabase start` is needed locally.
 - **"invalid or expired token"** — the app's session JWT is stale (often after a
   `supabase db reset` or a long idle). Sign out and sign back in to mint a fresh
   one.
