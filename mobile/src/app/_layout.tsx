@@ -1,6 +1,6 @@
 import { DefaultTheme, ThemeProvider } from 'expo-router';
 import { Platform } from 'react-native';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -28,9 +28,12 @@ function AuthGate() {
     if (loading) return;
     const inAuthGroup = segments[0] === '(auth)';
 
+    // Routes a signed-in user is allowed to sit on outside the tab group.
+    const allowedOutsideTabs = segments[0] === 'chat';
+
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
-    } else if (session && segments[0] !== '(tabs)') {
+    } else if (session && segments[0] !== '(tabs)' && !allowedOutsideTabs) {
       router.replace('/(tabs)');
     }
   }, [session, loading, segments, router]);
@@ -49,7 +52,13 @@ function AuthGate() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="chat" />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
