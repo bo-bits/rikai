@@ -1,4 +1,5 @@
 import { DefaultTheme, ThemeProvider } from 'expo-router';
+import { Platform } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -11,6 +12,12 @@ import { Colors } from '@/constants/theme';
 import { SessionProvider, useSession } from '@/lib/auth';
 
 SplashScreen.preventAutoHideAsync();
+
+// Force light mode on web — overrides browser/OS dark mode preference.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  document.documentElement.style.colorScheme = 'light';
+  document.body.style.backgroundColor = '#ffffff';
+}
 
 function AuthGate() {
   const { session, loading } = useSession();
